@@ -1,38 +1,59 @@
 clc
 clear all 
-rdata = load('hw3_train.dat');
-tdata = load('hw3_test.dat');
-set(0,'RecursionLimit',1000);
+
 global tree_count
 global tree_map
 global tree_nodes
 
-tree_count = 1;
-tree_map = [];
-tree_nodes = {};
+rdata = load('hw3_train.dat');
+tdata = load('hw3_test.dat');
+set(0,'RecursionLimit',1000);
 
-[G Gm1] = DecisionTree(rdata);
+N_tr = size(rdata,1);
+N_te = size(tdata,1);
+y_te = tdata(:,end);
 
-N = size(rdata,1);
+E_in_col = [];
+E_out_col = [];
+Frorest_col = {};
+for k=1:100,
+    
+    T = 300;
+    
+    E_in_bs_col = [];
+    Forest={};
 
-h = [];
-for i=1:N,
-    leaf = DecisionTreeTest(rdata(i,:));
-    h = [h; leaf];
+    for t=1:T,
+        tree_count = 1;
+        tree_map = [];
+        tree_nodes = {};
+        N_bs = N_tr;
+        ind = round(rand(N_bs,1).*100 + 0.5);
+
+        boosdata = rdata(ind,:);
+
+        y_tr = boosdata(:,end);
+
+        [G Gm1] = DecisionTree(boosdata);
+        Forest{t} = tree_nodes;
+        h = [];
+        for i=1:N_bs,
+            leaf = DecisionTreeTest(boosdata(i,:));
+            h = [h; leaf];
+        end
+
+        Ein = sum(y_tr~=h)/N_bs;
+        E_in_bs_col = [E_in_bs_col;Ein];
+
+%         h = [];
+%         for i=1:N,
+%             leaf = DecisionTreeTest(tdata(i,:));
+%             h = [h; leaf];
+%         end
+% 
+%         Eout = sum(y~=h)/N;
+
+    end
+    E_in_col = [E_in_col E_in_bs_col];
+    Frorest_col{k} = Forest;
 end
-
-y = rdata(:,end);
-
-Ein = sum(y~=h)/N;
-
-
-N = size(tdata,1);
-h = [];
-for i=1:N,
-    leaf = DecisionTreeTest(tdata(i,:));
-    h = [h; leaf];
-end
-
-y = tdata(:,end);
-
-Eout = sum(y~=h)/N;
