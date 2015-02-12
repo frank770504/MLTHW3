@@ -20,13 +20,13 @@ for i=1:100,
     Forest = Frorest_col{i};
     h_forest = [];
     for t=1:T,
-        N_bs = N_te;
+        N_bs = N_tr;
 
         tree_nodes = Forest{t};
         
         h = [];
         for i=1:N_bs,
-            leaf = DecisionTreeTest(tdata(i,:));
+            leaf = DecisionTreeTest(rdata(i,:));
             h = [h; leaf];
         end
         
@@ -38,8 +38,8 @@ for i=1:100,
     fprintf('\n');
     h_rf = sign(sum(h_forest')');
     h_rf_col = [h_rf_col h_rf];
-    Eout = sum(y_te~=h_rf)/N_te;
-    E_col = [E_col;Eout];
+    E = sum(y_tr~=h_rf)/N_tr;
+    E_col = [E_col;E];
 end
 
 mean(E_col)

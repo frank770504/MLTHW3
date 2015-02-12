@@ -17,7 +17,7 @@ E_in_col = [];
 E_out_col = [];
 Frorest_col = {};
 for k=1:100,
-    
+    fprintf('this is in %d\n',k);
     T = 300;
     
     E_in_bs_col = [];
@@ -34,7 +34,7 @@ for k=1:100,
 
         y_tr = boosdata(:,end);
 
-        [G Gm1] = DecisionTree(boosdata);
+        [G Gm1] = DecisionTreePas1(boosdata);
         Forest{t} = tree_nodes;
         h = [];
         for i=1:N_bs,
