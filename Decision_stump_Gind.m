@@ -28,7 +28,7 @@ H1 = zeros(D,4);
         Gind_col = sortrows(Gind_col,1);
         
         thind = Gind_col(1,2);
-        theta = (x_tr_sort(floor(thind),d) + x_tr_sort(ceil(thind),d))/0.5;
+        theta = (x_tr_sort(floor(thind),d) + x_tr_sort(ceil(thind),d))/2;
         minG = Gind_col(1,1);
         H1(d,1) = theta;
         H1(d,2) = thind;
