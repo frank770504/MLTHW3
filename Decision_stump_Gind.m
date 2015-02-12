@@ -1,4 +1,4 @@
-function [ th_all d_all s_all ] = Decision_stump_Gind( data_X, data_y, u)
+function [ th_all d_all thind_all ] = Decision_stump_Gind( data_X, data_y, u)
 %DECISION_STUMP Summary of this function goes here
 %   Detailed explanation goes here
 data = [data_X data_y];
@@ -15,116 +15,44 @@ H1 = zeros(D,4);
 %        figure
 %         plot(data_set(:,d), data_set(:,3))
 %         axis([0 1 -1.5 1.5])
-        count = 0;
-        count_max = 0;
-        count_m1 = 0;
-        count_m1_max = 0;
-        theta = 0;
-        theta_m1 = 0;
         
         y_tr_sort = data_set(:,end);
-        
-        y_poss = ones(Np,1);
-        y_poss_col = [];
+        x_tr_sort = data_set(:,1:D);
+       
         Gind_col = [];
         for i=1:Np-1,
-            if i==0,
-                y_temp = y_poss;
-                y_poss_col = [y_poss_col y_poss];
-            else
-                y_temp = y_poss;
-                y_temp(1:i) = y_temp(1:i).*-1;
-                y_poss_col = [y_poss_col y_temp];
-            end
-            [Gs1 Gsm1] = Gind(y_tr_sort, y_temp, i);
-            Gind_col = [Gind_col;Gs1 Gsm1 i+0.5];
+            gini = Gind(y_tr_sort, i);
+            Gind_col = [Gind_col;gini i+0.5];
         end
-%         for i=2:Np+1,
-%             y = data_set(i-1,end-1);
-%             u = data_set(i-1,end);
-%             %%1
-%             if 1~=y, 
-%                 count = count + u; 
-%             else
-%                 count = count - u;
-%             end
-%             if count>count_max, 
-%                 count_max = count;
-%                 if i~=Np+1
-%                     theta = (data_set(i-1,d) + data_set(i,d))*0.5;
-%                 else
-%                     theta = data_set(i-1,d) + 0.5;
-%                 end
-%             end
-%              
-%             %%-1
-%             if -1~=y, 
-%                 count_m1 = count_m1 + u; 
-%             else
-%                 count_m1 = count_m1 - u;
-%             end
-%             if count_m1>count_m1_max, 
-%                 count_m1_max = count_m1;
-%                 if i~=Np+1
-%                     theta_m1 = (data_set(i-1,d) + data_set(i,d))*0.5;
-%                 else
-%                     theta = data_set(i-1,d) + 0.5;
-%                 end
-%             end
-%         end
-       %H = [H; theta count_max/Np]; 
-       if size(Gind_col,1)==1,
-           val = Gind_col(1:2);
-           ind = 1;
-       else
-           [val ind] = min(Gind_col);
-       end
-       if val(1)==val(2),
-           minG = val(1);
-           [va in] = max(ind);
-           theta = va + 0.5;
-           if in==1, s = 1; end
-           if in==2, s = -1; end
-       else
-           [va in] = min(val);
-           minG = va;
-           if size(Gind_col,1)==1,
-               theta = ind + 0.5;
-           else
-                theta = ind(in) + 0.5;
-           end
-           if in==1, s = 1; end
-           if in==2, s = -1; end
-       end
-       
+
+        Gind_col = sortrows(Gind_col,1);
+        
+        thind = Gind_col(1,2);
+        theta = (x_tr_sort(floor(thind),d) + x_tr_sort(ceil(thind),d))/0.5;
+        minG = Gind_col(1,1);
         H1(d,1) = theta;
-        H1(d,2) = s;
+        H1(d,2) = thind;
         H1(d,3) = d;
         H1(d,4) = minG;
     end
     H = sortrows(H1,4);
     th_all = H(1,1);
     d_all = H(1,3);
-    s_all = H(1,2);    
+    thind_all = H(1,2);    
 end
 
-function [Gs1 Gsm1] = Gind(y, h, i)
-    N = size(y,1);
-    hs1 = h; Nm1 = i; N1 = N - i;
-    if i==0,
-        gm1 =  0;
-    else
-        gm1 =  (sum((y(1:i)==hs1(1:i)))/N).^2;
-    end
-    g1 =  (sum((y(i+1:N)==hs1(i+1:N)))/N).^2;
-    Gs1 = 1 - gm1 - g1;
+function [gini G1 G2] = Gind(y, i)
+    G1.y = y(1:i);
+    G1.N = size(G1.y,1);
+    G2.y = y(i+1:end);
+    G2.N = size(G2.y,1);
     
-    hsm1 = h.*-1; N1 = i; Nm1 = N - i;
-    if i==0,
-        gm1 = 0;
-    else
-        gm1 =  (sum((y(1:i)==hsm1(1:i)))/N).^2;
-    end
-    g1 =  (sum((y(i+1:N)==hsm1(i+1:N)))/N).^2;    
-    Gsm1 = 1 - gm1 - g1;
+    G1.frac1 = (sum(G1.y==ones(G1.N,1))/G1.N)^2;
+    G1.fracm1 = (sum(G1.y==(ones(G1.N,1).*-1))/G1.N)^2;
+    G1.gini = 1 - G1.frac1 - G1.frac1;
+    G2.frac1 = (sum(G2.y==ones(G2.N,1))/G2.N)^2;
+    G2.fracm1 = (sum(G2.y==(ones(G2.N,1).*-1))/G2.N)^2;
+    G2.gini = 1 - G2.frac1 - G2.frac1;
+    
+    gini = G1.N*G1.gini + G2.N*G2.gini;
 end
